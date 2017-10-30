@@ -16,18 +16,23 @@ for firsturl in fifourl:
 fifourl.close()
 #########################################
 
-
-PROJECT_NAME = 'viper-seo'
+delete_file_contents()
+create_data_files(HOMEPAGE)
+####################################
+#PROJECT_NAME = 'viper-seo'
 #HOMEPAGE = 'http://www.cplusplus.com/'
 DOMAIN_NAME = get_domain_name(HOMEPAGE)
-QUEUE_FILE = PROJECT_NAME + '/queue.txt'
-CRAWLED_FILE = PROJECT_NAME + '/crawled.txt'
+#QUEUE_FILE = PROJECT_NAME + '/queue.txt'
+QUEUE_FILE = 'queue.txt'
+CRAWLED_FILE = 'crawled.txt'
+#CRAWLED_FILE = PROJECT_NAME + '/crawled.txt'
 NUMBER_OF_THREADS = 8
 queue = Queue()
 
+working=True
 
-
-Spider(PROJECT_NAME, HOMEPAGE, DOMAIN_NAME)
+#Spider(PROJECT_NAME, HOMEPAGE, DOMAIN_NAME)
+Spider(HOMEPAGE, DOMAIN_NAME)
 
 
 # Create worker threads (will die when main exits)
@@ -40,12 +45,19 @@ def create_workers():
 
 # Do the next job in the queue
 def work():
-    while True:
+    global working
+    while working:
         url = queue.get()
+
+        #if(queue.empty()):
+           # working=False
+            #sys.exit()
+            #print("###############################################################\n###############################################################\n###############################################################\n")
+        
         Spider.crawl_page(threading.current_thread().name, url)
         queue.task_done()
 
-
+    
 # Each queued link is a new job
 def create_jobs():
     for link in file_to_set(QUEUE_FILE):
