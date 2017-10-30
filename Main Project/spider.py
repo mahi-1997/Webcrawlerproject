@@ -14,7 +14,7 @@ class Spider:
     global fifopath1
     #os.mkfifo(fifopath1)
     ########################
-    project_name = ''
+    #project_name = ''
     base_url = ''
     domain_name = ''
     queue_file = ''
@@ -22,21 +22,22 @@ class Spider:
     queue = set()
     crawled = set()
 
-    def __init__(self, project_name, base_url, domain_name):
+    def __init__(self, base_url, domain_name):
         
-        Spider.project_name = project_name
+        #Spider.project_name = project_name
         Spider.base_url = base_url
         Spider.domain_name = domain_name
-        Spider.queue_file = Spider.project_name + '/queue.txt'
-        Spider.crawled_file = Spider.project_name + '/crawled.txt'
-        self.boot()
+        Spider.queue_file = 'queue.txt'
+        #Spider.crawled_file = Spider.project_name + '/crawled.txt'
+        Spider.crawled_file = 'crawled.txt'
+        #self.boot()
         self.crawl_page('First spider', Spider.base_url)
 
     # Creates directory and files for project on first run and starts the spider
     @staticmethod
     def boot():
-        create_project_dir(Spider.project_name)
-        create_data_files(Spider.project_name, Spider.base_url)
+        #create_project_dir(Spider.project_name)
+        create_data_files(Spider.base_url)
         Spider.queue = file_to_set(Spider.queue_file)
         Spider.crawled = file_to_set(Spider.crawled_file)
 
@@ -90,10 +91,14 @@ class Spider:
             ############################
             global fifopath1
             linetofeed=page_url1+" "+url+" "+crawl_time
-            fifo1 = open(fifopath1, "w")
-            fifo1.write(linetofeed+"\n")
-            #time.sleep(1)
-            fifo1.close()
+
+            try:
+                fifo1 = open(fifopath1, "w")
+                fifo1.write(linetofeed+"\n")
+                #time.sleep(1)
+                fifo1.close()
+            except Exception as e:
+                print("OS fifo error ..")
 
             ############################
             
