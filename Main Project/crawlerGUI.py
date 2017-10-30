@@ -6,6 +6,8 @@ import os
 import sys
 import subprocess
 
+from general import *
+
 import time
 import threading
 from wx.lib.pubsub import setupkwargs
@@ -24,7 +26,7 @@ class MyForm(wx.Frame):
         panel = wx.Panel(self, wx.ID_ANY)
         self.index = 0
  
-        self.list_ctrl = wx.ListCtrl(panel, size=(-1,600),
+        self.list_ctrl = wx.ListCtrl(panel, size=(-1,750),
                          style=wx.LC_REPORT
                          |wx.BORDER_SUNKEN
                          )
@@ -33,11 +35,11 @@ class MyForm(wx.Frame):
         self.list_ctrl.InsertColumn(2, 'time', width=165)
         self.list_ctrl.SetBackgroundColour((204,255,255))
  
-        btn = wx.Button(panel, label="Add Line")
+        #btn = wx.Button(panel, label="Add Line")
         #btn2 = wx.Button(panel, label="Get Data")
         btn3 = wx.Button(panel, label="Crawl")
         btn3.SetBackgroundColour((0,204,204))
-        btn.Bind(wx.EVT_BUTTON, self.add_line)
+        #btn.Bind(wx.EVT_BUTTON, self.add_line)
         #btn2.Bind(wx.EVT_BUTTON, self.get_data)
         btn3.Bind(wx.EVT_BUTTON, self.refresh_data)
 
@@ -56,7 +58,8 @@ class MyForm(wx.Frame):
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(bSizer1, 0, wx.ALL|wx.CENTER, 5)
         sizer.Add(self.list_ctrl, 0, wx.ALL|wx.EXPAND, 5)
-        sizer.Add(btn, 0, wx.ALL|wx.CENTER, 5)
+        
+        #sizer.Add(btn, 0, wx.ALL|wx.CENTER, 5)
         #sizer.Add(btn2, 0, wx.ALL|wx.CENTER, 5)
         #sizer.Add(btn3, 0, wx.ALL|wx.CENTER, 5)
         panel.SetSizer(sizer)
@@ -103,12 +106,17 @@ class MyForm(wx.Frame):
         crawl_thread = threading.Thread(target = StartCrawlThread, args = ()) 
         crawl_thread.start()
         print(self.editname.GetValue())
-        fifourlpath = "my_baseurl.fifo"
-        #os.mkfifo(fifourlpath)
-        fifourl = open(fifourlpath, "w")
 
-        fifourl.write(self.editname.GetValue())
-        fifourl.close()
+        try:
+            fifourlpath = "my_baseurl.fifo"
+            #os.mkfifo(fifourlpath)
+            fifourl = open(fifourlpath, "w")
+
+            fifourl.write(self.editname.GetValue())
+            fifourl.close()
+
+        except Exception as e:
+            print("OS fifo error ..")
         ########
         
         #subprocess.Popen("main.py", shell=True)
@@ -148,19 +156,23 @@ def InterfaceThread():
         #i = randrange(10)
         #for k in range(1,i+1):
         #   mylist.append(randrange(10))
-        path = "my_result.fifo"
-        fifo = open(path, "r")
-        for line in fifo:
-           if line=="":
-               break
-           print "Received: " + line+"\n"
-           word=line.split()
-           if(len(word)>=3):
-               mylist1.append(word[0])
-               mylist2.append(word[1])
-               mylist3.append(word[2])
+        try:
+            path = "my_result.fifo"
+            fifo = open(path, "r")
+            for line in fifo:
+               if line=="":
+                   break
+               print "Received: " + line+"\n"
+               word=line.split()
+               if(len(word)>=3):
+                   mylist1.append(word[0])
+                   mylist2.append(word[1])
+                   mylist3.append(word[2])
 
-        fifo.close()
+            fifo.close()
+
+        except Exception as e:
+            print("OS fifo error ..")
 
         # Tell the GUI about them
         wx.CallAfter(pub.sendMessage, "NEW_LABELS", label1= mylist1, label2= mylist2, label3= mylist3)
@@ -180,6 +192,7 @@ class ServerInterface():
 # Run the program
 if __name__ == "__main__":
     app = wx.App(False)
+    create_fifo()
     crawl_thread = threading.Thread(target = StartCrawlThread, args = ()) 
     crawl_thread.start()
     frame = MyForm()
