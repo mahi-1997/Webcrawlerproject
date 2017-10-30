@@ -4,12 +4,14 @@ import wx
 import wx.lib.scrolledpanel
 import os
 import sys
-
+import subprocess
 
 import time
 import threading
 from wx.lib.pubsub import setupkwargs
 from wx.lib.pubsub import pub
+
+#from webmain import *
  
  
 class MyForm(wx.Frame):
@@ -29,10 +31,12 @@ class MyForm(wx.Frame):
         self.list_ctrl.InsertColumn(0, 'parent url', width=560)
         self.list_ctrl.InsertColumn(1, 'linked url', width=560)
         self.list_ctrl.InsertColumn(2, 'time', width=165)
+        self.list_ctrl.SetBackgroundColour((204,255,255))
  
         btn = wx.Button(panel, label="Add Line")
         #btn2 = wx.Button(panel, label="Get Data")
         btn3 = wx.Button(panel, label="Crawl")
+        btn3.SetBackgroundColour((0,204,204))
         btn.Bind(wx.EVT_BUTTON, self.add_line)
         #btn2.Bind(wx.EVT_BUTTON, self.get_data)
         btn3.Bind(wx.EVT_BUTTON, self.refresh_data)
@@ -92,12 +96,27 @@ class MyForm(wx.Frame):
                 print(item.GetText())
     ######################################
     def refresh_data(self, event):
+        os.system("pkill -f main.py")
+        while(self.index!=0):
+            self.list_ctrl.DeleteItem(self.index-1)
+            self.index -=1
+        crawl_thread = threading.Thread(target = StartCrawlThread, args = ()) 
+        crawl_thread.start()
         print(self.editname.GetValue())
         fifourlpath = "my_baseurl.fifo"
-        os.mkfifo(fifourlpath)
+        #os.mkfifo(fifourlpath)
         fifourl = open(fifourlpath, "w")
+
         fifourl.write(self.editname.GetValue())
         fifourl.close()
+        ########
+        
+        #subprocess.Popen("main.py", shell=True)
+        #############
+
+
+
+
         print("before system call..")
 
         #os.system('python main.py')
@@ -108,13 +127,14 @@ class MyForm(wx.Frame):
 
 
 
-        while(self.index!=0):
-            self.list_ctrl.DeleteItem(self.index-1)
-            self.index -=1
+        
 
 ###############################
 #
 #
+
+def StartCrawlThread():
+    os.system("python main.py")
 
 def InterfaceThread():
 
@@ -135,10 +155,10 @@ def InterfaceThread():
                break
            print "Received: " + line+"\n"
            word=line.split()
-
-           mylist1.append(word[0])
-           mylist2.append(word[1])
-           mylist3.append(word[2])
+           if(len(word)>=3):
+               mylist1.append(word[0])
+               mylist2.append(word[1])
+               mylist3.append(word[2])
 
         fifo.close()
 
@@ -153,10 +173,15 @@ class ServerInterface():
     def __init__(self):
         interface_thread = threading.Thread(target = InterfaceThread, args = ()) 
         interface_thread.start()
+        
+        
+
 
 # Run the program
 if __name__ == "__main__":
     app = wx.App(False)
+    crawl_thread = threading.Thread(target = StartCrawlThread, args = ()) 
+    crawl_thread.start()
     frame = MyForm()
 
     frame.Show()
